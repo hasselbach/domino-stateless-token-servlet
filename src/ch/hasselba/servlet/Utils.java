@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import sun.misc.BASE64Decoder;
 import com.ibm.commons.util.io.base64.Base64;
+import com.ibm.designer.domino.napi.NotesObject;
 
 public class Utils {
 	
@@ -90,4 +91,5 @@ public class Utils {
 		
 		return dt;
 	}
+
 }

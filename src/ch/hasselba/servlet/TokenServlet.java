@@ -3,6 +3,7 @@ package ch.hasselba.servlet;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.util.Vector;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -12,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import lotus.domino.NotesException;
 import lotus.domino.Session;
+import lotus.domino.Base;
 import ch.hasselba.servlet.StatelessToken;
 import com.ibm.domino.napi.c.NotesUtil;
 import com.ibm.domino.napi.c.xsp.XSPNative;
@@ -26,7 +28,8 @@ public class TokenServlet extends HttpServlet implements Serializable {
 	private static final String PARAM_USERNAME = "username";
 	private static final String PARAM_PASSWORD = "password";
 	private static final String PARAM_TOKEN = "token";
-	
+	private static final String USERNAME_ANONYMOUS = "Anonymous";
+	private static final String USERNAME_BACKEND = "Sven Hasselbach";
 	private final StatelessToken tokenHandler;
 	private Session currentSession;
 
@@ -54,14 +57,17 @@ public class TokenServlet extends HttpServlet implements Serializable {
 				password = req.getParameter(PARAM_PASSWORD);
 					
 				// TODO: Validate the password
-				// Check Names.nsf
-				// If not OK, return SC_UNAUTHORIZED  
-					
-				res.setContentType( CONTENT_TYPE_JSON );
-				String tokenStr = tokenHandler.createTokenForUser(userName);
-				res.addHeader(AUTH_HEADER_NAME, tokenStr);
-				out.println("{token: '" + tokenStr + "'}");
-				return;
+				if(this.validatePassword( userName, password)){
+					res.setContentType( CONTENT_TYPE_JSON );
+					String tokenStr = tokenHandler.createTokenForUser(userName);
+					res.addHeader(AUTH_HEADER_NAME, tokenStr);
+					out.println("{token: '" + tokenStr + "'}");
+					return;
+				}else{
+					res.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+					return;
+			 	}
+			
 			}
 			 
 			 if( requestURL.indexOf( URL_PATH_VALIDATE ) != -1  ){
@@ -83,8 +89,9 @@ public class TokenServlet extends HttpServlet implements Serializable {
 					userName = "Anonymous";
 				 
 				 res.setContentType( CONTENT_TYPE_JSON );
-				 Session s = createUserSession( userName );
-				 out.println("{user: '" + s.getEffectiveUserName() + "'}");
+				 this.currentSession = createUserSession( userName );
+				 out.println("{user: '" + this.currentSession.getEffectiveUserName() + "'}");
+				
 				 return;
 			 }
 			 
@@ -94,6 +101,7 @@ public class TokenServlet extends HttpServlet implements Serializable {
 		} catch (Exception e) {
 			e.printStackTrace(new PrintStream(out));
 		} finally {
+			recycleDominoObjects(  this.currentSession );
 			out.close();
 		}
 	}
@@ -138,17 +146,58 @@ public class TokenServlet extends HttpServlet implements Serializable {
 	 */
 	private Session createUserSession(final String userName)
 			throws ServletException {
+			Session session = null;
 		try {
 			long hList = NotesUtil.createUserNameList(userName);
-			this.currentSession = XSPNative.createXPageSession(userName, hList,
+			session = XSPNative.createXPageSession(userName, hList,
 					false, false);
 
-			return this.currentSession;
+			return session;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 		return this.currentSession;
 	}
+	
+	private boolean validatePassword( final String userName, final String password){
+		Session session = null;
+		try {
+			session = createUserSession( USERNAME_BACKEND );
+			Vector<?> result = session.evaluate( "@NameLookup([TrustedOnly] ;\"" + userName + "\"; \"HTTPPassword\");" );
+			String hashedPwd = result.firstElement().toString() ;
+			if( "".equals( hashedPwd ) )
+				return false;
+			
+			if( session.verifyPassword( password, hashedPwd  ) == true )
+				return true;
+			
+		} catch (ServletException e) {
+			e.printStackTrace();
+		} catch (NotesException e) {
+			e.printStackTrace();
+		} finally{
+			recycleDominoObjects( session );
+		}
+		
+		return false;
+	}
 
+	
+	/**
+	 * recycleDominoObjects helper method for recycling Domino objects
+	 * 
+	 * @param nObjects
+	 *            the Domino objects to recycle
+	 */
+	static void recycleDominoObjects(Base... nObjects) {
+		for (Base nObject : nObjects) {
+			if (nObject != null) {
+				try {
+					(nObject).recycle();
+				} catch (Exception ne) {
+				}
+			}
+		}
+	}
 }
