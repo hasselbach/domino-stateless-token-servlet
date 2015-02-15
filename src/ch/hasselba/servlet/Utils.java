@@ -1,10 +1,16 @@
 package ch.hasselba.servlet;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Properties;
+
+import javax.servlet.ServletContext;
+
+import lotus.domino.Base;
 import sun.misc.BASE64Decoder;
 import com.ibm.commons.util.io.base64.Base64;
 import com.ibm.designer.domino.napi.NotesObject;
@@ -91,5 +97,23 @@ public class Utils {
 		
 		return dt;
 	}
-
+	
+	/**
+	 * recycleDominoObjects helper method for recycling Domino objects
+	 * 
+	 * @param nObjects
+	 *            the Domino objects to recycle
+	 */
+	public static void recycleDominoObjects(Base... nObjects) {
+		for (Base nObject : nObjects) {
+			if (nObject != null) {
+				try {
+					(nObject).recycle();
+				} catch (Exception ne) {
+				}
+			}
+		}
+	}
+	
+	
 }
