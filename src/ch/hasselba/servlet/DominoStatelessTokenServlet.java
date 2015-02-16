@@ -28,6 +28,8 @@ public class DominoStatelessTokenServlet extends HttpServlet implements Serializ
 	private static final String PARAM_USERNAME = "username";
 	private static final String PARAM_PASSWORD = "password";
 	private static final String PARAM_TOKEN = "token";
+	private static final int TOKEN_SIZE_MIN = 93;
+	private static final int TOKEN_SIZE_MAX = TOKEN_SIZE_MIN + 1;
 	private String userNameBackend;
 	private String secretSalt;
 	private StatelessToken tokenHandler;
@@ -87,12 +89,18 @@ public class DominoStatelessTokenServlet extends HttpServlet implements Serializ
 					 res.sendError(HttpServletResponse.SC_BAD_REQUEST);
 					return;
 				 }
-				 
+				 if( token.length() != TOKEN_SIZE_MIN && token.length() != TOKEN_SIZE_MAX ){
+					 res.sendError(HttpServletResponse.SC_BAD_REQUEST);
+					return;
+				 }
 				 userName = getAuthentication(token);
 				 if (userName != null){
 					 res.setContentType( CONTENT_TYPE_JSON );
 					 this.currentSession = createUserSession( userName );
 					 out.println("{user: '" + this.currentSession.getEffectiveUserName() + "'}");
+				 }else{
+					res.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+					return; 
 				 }
 				 return;
 			 }
