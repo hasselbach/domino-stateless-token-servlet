@@ -2,6 +2,9 @@ package ch.hasselba.servlet;
 
 import static org.junit.Assert.*;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -127,18 +130,41 @@ public class DominoStatelessTokenServletTest {
 		
 		driver.get(baseUrl + "/create/?username=" + this.user1Name + "&password=" + this.user1Password);
 		txt = driver.findElement(By.tagName("pre")).getText();
-		token = txt.substring(9, txt.lastIndexOf("'"));
+		token = encodeToken(txt.substring(9, txt.lastIndexOf("'")));
 		driver.get(baseUrl + "/validate/?token=" + token );
 		assertEquals("{user: '" + this.user1Name  + "'}", driver.findElement(By.tagName("pre")).getText());
 		
 		driver.get(baseUrl + "/create/?username=" + this.user2Name + "&password=" + this.user2Password);
 		txt = driver.findElement(By.tagName("pre")).getText();
-		token = txt.substring(9, txt.lastIndexOf("'"));
+		token = encodeToken(txt.substring(9, txt.lastIndexOf("'")));
 		driver.get(baseUrl + "/validate/?token=" + token );
 		
 		assertEquals("{user: '" + this.user2Name + "'}", driver.findElement(By.tagName("pre")).getText());
 	}
-	
+	@Test
+	public void testValidateSuccess5000Times() throws Exception {
+		String token1 = null;
+		String token2 = null;
+		String txt = null;
+		
+		driver.get(baseUrl + "/create/?username=" + this.user1Name + "&password=" + this.user1Password);
+		txt = driver.findElement(By.tagName("pre")).getText();
+		token1 = encodeToken(txt.substring(9, txt.lastIndexOf("'")));
+		driver.get(baseUrl + "/create/?username=" + this.user2Name + "&password=" + this.user2Password);
+		txt = driver.findElement(By.tagName("pre")).getText();
+		token2 = encodeToken(txt.substring(9, txt.lastIndexOf("'")));
+
+		for( int i=0; i<5000;i++){
+			
+			driver.get(baseUrl + "/validate/?token=" + token1 + "&norefresh=" + java.lang.System.currentTimeMillis() );
+			assertEquals("{user: '" + this.user1Name  + "'}", driver.findElement(By.tagName("pre")).getText());
+			
+			
+			driver.get(baseUrl + "/validate/?token=" + token2 + "&norefresh=" + java.lang.System.currentTimeMillis() );
+			
+			assertEquals("{user: '" + this.user2Name + "'}", driver.findElement(By.tagName("pre")).getText());
+		}
+	}
 	@After
 	public void tearDown() throws Exception {
 		driver.quit();
@@ -146,6 +172,10 @@ public class DominoStatelessTokenServletTest {
 		if (!"".equals(verificationErrorString)) {
 			fail(verificationErrorString);
 		}
+	}
+	
+	private String encodeToken( final String token ) throws UnsupportedEncodingException{
+		return  URLEncoder.encode( token, "UTF-8" );
 	}
 
 }
