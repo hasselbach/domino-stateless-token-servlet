@@ -1,19 +1,10 @@
 package ch.hasselba.servlet;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Properties;
-
-import javax.servlet.ServletContext;
-
 import lotus.domino.Base;
-import sun.misc.BASE64Decoder;
-import com.ibm.commons.util.io.base64.Base64;
-import com.ibm.designer.domino.napi.NotesObject;
+import org.apache.commons.codec.binary.Base64;
 
 public class Utils {
 	
@@ -28,18 +19,7 @@ public class Utils {
 	 * @return the decoded byte array
 	 */
 	public static byte[] fromBase64(final byte[] toDecode) {
-		byte[] result = null;
-
-		try {
-			String toDecodeStr = new String(toDecode);
-			result = new BASE64Decoder().decodeBuffer(toDecodeStr);
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		return result;
+		return Base64.decodeBase64(toDecode);
 	}
 
 	/**
@@ -50,11 +30,7 @@ public class Utils {
 	 * @return the encoded byte array
 	 */
 	public static byte[] toBase64(final byte[] toEncode) {
-		byte[] result = null;
-
-		String toEncodeStr = new String(toEncode);
-		result = Base64.encode(toEncodeStr).getBytes();
-		return result;
+		return Base64.encodeBase64( toEncode );
 	}
 	
 	/**
@@ -109,8 +85,7 @@ public class Utils {
 			if (nObject != null) {
 				try {
 					(nObject).recycle();
-				} catch (Exception ne) {
-				}
+				} catch (Exception e) {}
 			}
 		}
 	}
