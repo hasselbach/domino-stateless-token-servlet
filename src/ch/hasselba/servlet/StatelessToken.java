@@ -83,7 +83,7 @@ public class StatelessToken {
 			Date testDate = new Date();
 			
 			// Only process timestamps younger then now
-			if ( testDate.getTime() > tokenTimeStamp.getTime() ) {
+			if ( testDate.getTime() >= tokenTimeStamp.getTime() ) {
 				// TODO: MaxAge must be configurable. Now it is 1h max
 				Calendar dt = Calendar.getInstance();
 				dt.roll(Calendar.HOUR_OF_DAY, -1);

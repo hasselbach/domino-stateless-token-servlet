@@ -142,7 +142,7 @@ public class DominoStatelessTokenServletTest {
 		assertEquals("{user: '" + this.user2Name + "'}", driver.findElement(By.tagName("pre")).getText());
 	}
 	@Test
-	public void testValidateSuccess5000Times() throws Exception {
+	public void testValidateSuccess100Times() throws Exception {
 		String token1 = null;
 		String token2 = null;
 		String txt = null;
@@ -154,7 +154,7 @@ public class DominoStatelessTokenServletTest {
 		txt = driver.findElement(By.tagName("pre")).getText();
 		token2 = encodeToken(txt.substring(9, txt.lastIndexOf("'")));
 
-		for( int i=0; i<5000;i++){
+		for( int i=0; i<100;i++){
 			
 			driver.get(baseUrl + "/validate/?token=" + token1 + "&norefresh=" + java.lang.System.currentTimeMillis() );
 			assertEquals("{user: '" + this.user1Name  + "'}", driver.findElement(By.tagName("pre")).getText());

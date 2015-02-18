@@ -29,7 +29,7 @@ public class UtilsTest {
 		
 		assertTrue(Arrays.equals(result, testResult));
 		
-		toDecode = new String("MjAxNS9GZWIvMDggMTI6MjA6MjEuQ049U3ZlbiBIYXNzZWxiYWNoL09VPUhhc3NlbGJhL089REU").getBytes();
+		toDecode = new String("MjAxNS9GZWIvMDggMTI6MjA6MjEuQ049U3ZlbiBIYXNzZWxiYWNoL09VPUhhc3NlbGJhL089REU9").getBytes();
 		result = new String("2015/Feb/08 12:20:21.CN=Sven Hasselbach/OU=Hasselba/O=DE=").getBytes();
 		
 		testResult = Utils.fromBase64(toDecode);

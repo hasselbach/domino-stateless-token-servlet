@@ -49,7 +49,8 @@ public class DominoStatelessTokenServlet extends HttpServlet implements Serializ
 		String password = null;
 		ServletOutputStream out = res.getOutputStream();
 		
-
+		System.out.println("URL " + req.getRequestURL().toString());
+ 
 		try {
 			 StringBuffer requestURL = req.getRequestURL();
 			 	
