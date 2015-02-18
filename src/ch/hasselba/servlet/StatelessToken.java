@@ -3,8 +3,6 @@ package ch.hasselba.servlet;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -13,7 +11,9 @@ public class StatelessToken {
 	private static final String HMAC_ALGORITHM = "HmacSHA256";
 	private static final String SEPARATOR_SPLITTER = "!";
 	private Mac hmac;
-
+	private static final long DEFAULT_MAXAGE = 3600 * 1000;
+	private long maxAge = DEFAULT_MAXAGE;
+	
 	/**
 	 * Stateless Token constructor
 	 * 
@@ -31,6 +31,15 @@ public class StatelessToken {
 			e.printStackTrace();
 		}
 
+	}
+
+	
+	public void setMaxAge( final long maxAge ){
+		this.maxAge = maxAge;
+	}
+	
+	public long getMaxAge(){
+		return this.maxAge;
 	}
 	/**
 	 * creates a Hmac hash from the given byte Array
@@ -64,9 +73,8 @@ public class StatelessToken {
 			final byte[] data = Utils.fromBase64( particles[0].getBytes() );
 			final byte[] hash = Utils.fromBase64( particles[1].getBytes() );
 				
-			// TODO: There is a damn Bug with the encoding / decoding.
-			// Only solution is to encode / decode the fresh Hmac hash to get the same result
-			final byte[] hmac = Utils.fromBase64(Utils.toBase64(createHmac(data)));
+			// create the validation Hmac
+			final byte[] hmac = createHmac(data);
 			
 			// Validate the hash & drop if not matching
 			boolean validHash = Arrays.equals(hmac, hash);
@@ -74,21 +82,19 @@ public class StatelessToken {
 				return null;
 			}
 			
-			
-			// TODO: Hash is OK, but maybe too many elements??  Thinking about a validation...
+			// Split data into TimeStamp & Username
 			final String[] dataParticles = Utils.convertByteArrayToString( data ).split( SEPARATOR_SPLITTER );
+			if( dataParticles.length != 2 )
+				return null;
 			
 			// get token timestamp
-			Date tokenTimeStamp = Utils.getStringAsDate( dataParticles[0] );
-			Date testDate = new Date();
+			long timestampToken = Long.parseLong(dataParticles[0] );
+			long timestampNow = System.currentTimeMillis();
 			
 			// Only process timestamps younger then now
-			if ( testDate.getTime() >= tokenTimeStamp.getTime() ) {
-				// TODO: MaxAge must be configurable. Now it is 1h max
-				Calendar dt = Calendar.getInstance();
-				dt.roll(Calendar.HOUR_OF_DAY, -1);
-					
-				if( dt.getTimeInMillis() < tokenTimeStamp.getTime() )
+			if ( timestampNow >= timestampToken) {
+			
+				if( timestampToken < (timestampNow + maxAge) )
 					return dataParticles[1]; // everything is ok, return the username
 			}
 					
@@ -112,23 +118,22 @@ public class StatelessToken {
 	public String createTokenForUser(final String userName) {
 		
 		// get current timestamp
-		final Calendar currentDate = Calendar.getInstance();
-		final String dateNow = Utils.getDateAsString( currentDate.getTime() );
+		final long timestamp = System.currentTimeMillis();
 		
-		// create user data part: token creation timestamp & usernam
+		// create user data part: token creation timestamp & username
 		StringBuilder sb = new StringBuilder();
-		sb.append( dateNow );
+		sb.append( timestamp );
 		sb.append( SEPARATOR_SPLITTER );
 		sb.append( userName );
 		
 		// convert to byte array
-		byte[] userBytes = sb.toString().getBytes();
+		final byte[] userBytes = sb.toString().getBytes();
 		
 		// create a Hmac hash
-		byte[] hash = createHmac(userBytes);
+		final byte[] hash = createHmac(userBytes);
 
 		// generate the token
-		// TODO: encrypt the user data part
+		// TODO: encrypt the user data part ??
 		sb = new StringBuilder();
 		sb.append( Utils.convertByteArrayToString(Utils.toBase64(userBytes)) );
 		sb.append(SEPARATOR_SPLITTER);

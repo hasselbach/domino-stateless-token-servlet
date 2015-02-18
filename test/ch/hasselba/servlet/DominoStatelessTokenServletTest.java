@@ -32,10 +32,12 @@ public class DominoStatelessTokenServletTest {
 		driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
 	}
 
-	@Test
+
 	/**
 	 * tests if the servlet returns a 400er if only opened directly
 	 * @throws Exception
+	 * 
+	 * DISABLED: Redirect to Index instead!
 	 */
 	public void testEmptyPath() throws Exception {
 		driver.get(baseUrl);
@@ -87,11 +89,11 @@ public class DominoStatelessTokenServletTest {
 	 * @throws Exception
 	 */
 	public void testCreateSuccess() throws Exception {
-		driver.get(baseUrl + "/create/?username=" + this.user1Name + "&password=" + this.user1Password);
+		driver.get(baseUrl + "/create/?username=" + this.user1Name + "&password=" + this.user1Password + "&debug=1");
 		String txt = driver.findElement(By.tagName("pre")).getText();
 		assertEquals("{token:", txt.substring(0, 7));
 		
-		driver.get(baseUrl + "/create/?username=" + this.user2Name + "&password=" + this.user2Password);
+		driver.get(baseUrl + "/create/?username=" + this.user2Name + "&password=" + this.user2Password + "&debug=1");
 		txt = driver.findElement(By.tagName("pre")).getText();
 		assertEquals("{token:", txt.substring(0, 7));
 	}
@@ -128,29 +130,31 @@ public class DominoStatelessTokenServletTest {
 		String token = null;
 		String txt = null;
 		
-		driver.get(baseUrl + "/create/?username=" + this.user1Name + "&password=" + this.user1Password);
+		driver.get(baseUrl + "/create/?username=" + this.user1Name + "&password=" + this.user1Password + "&debug=1");
 		txt = driver.findElement(By.tagName("pre")).getText();
 		token = encodeToken(txt.substring(9, txt.lastIndexOf("'")));
-		driver.get(baseUrl + "/validate/?token=" + token );
+		driver.get(baseUrl + "/validate/?token=" + token + "&debug=1" );
 		assertEquals("{user: '" + this.user1Name  + "'}", driver.findElement(By.tagName("pre")).getText());
 		
-		driver.get(baseUrl + "/create/?username=" + this.user2Name + "&password=" + this.user2Password);
+		driver.get(baseUrl + "/create/?username=" + this.user2Name + "&password=" + this.user2Password + "&debug=1");
 		txt = driver.findElement(By.tagName("pre")).getText();
 		token = encodeToken(txt.substring(9, txt.lastIndexOf("'")));
-		driver.get(baseUrl + "/validate/?token=" + token );
+		driver.get(baseUrl + "/validate/?token=" + token  + "&debug=1");
 		
 		assertEquals("{user: '" + this.user2Name + "'}", driver.findElement(By.tagName("pre")).getText());
 	}
-	@Test
+	//@Test
+	// test disabled!
+	
 	public void testValidateSuccess100Times() throws Exception {
 		String token1 = null;
 		String token2 = null;
 		String txt = null;
 		
-		driver.get(baseUrl + "/create/?username=" + this.user1Name + "&password=" + this.user1Password);
+		driver.get(baseUrl + "/create/?username=" + this.user1Name + "&password=" + this.user1Password + "&debug=1");
 		txt = driver.findElement(By.tagName("pre")).getText();
 		token1 = encodeToken(txt.substring(9, txt.lastIndexOf("'")));
-		driver.get(baseUrl + "/create/?username=" + this.user2Name + "&password=" + this.user2Password);
+		driver.get(baseUrl + "/create/?username=" + this.user2Name + "&password=" + this.user2Password + "&debug=1");
 		txt = driver.findElement(By.tagName("pre")).getText();
 		token2 = encodeToken(txt.substring(9, txt.lastIndexOf("'")));
 

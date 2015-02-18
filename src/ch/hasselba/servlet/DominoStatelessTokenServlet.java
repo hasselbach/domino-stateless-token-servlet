@@ -27,29 +27,32 @@ public class DominoStatelessTokenServlet extends HttpServlet implements Serializ
 	private static final String URL_PATH_CREATE = "/create/";
 	private static final String PARAM_USERNAME = "username";
 	private static final String PARAM_PASSWORD = "password";
+	private static final String PARAM_DEBUGMODE = "debug";
 	private static final String PARAM_TOKEN = "token";
-	private static final int TOKEN_SIZE_MIN = 93;
-	private static final int TOKEN_SIZE_MAX = TOKEN_SIZE_MIN + 1;
 	private String userNameBackend;
 	private String secretSalt;
 	private StatelessToken tokenHandler;
 	private Session currentSession;
-
+	
 	
 	public void init() throws ServletException{
 		ServletContext ctx = getServletContext();
 		userNameBackend = ctx.getInitParameter("UsernameBackend");
 		secretSalt = ctx.getInitParameter("SecretSalt");
 		tokenHandler = new StatelessToken( secretSalt );
-
+		final String maxAgeStr = ctx.getInitParameter( "TokenMaxAge" );
+		if( ! "".equals( maxAgeStr) ){
+			final long maxAge = Long.parseLong( maxAgeStr );
+			tokenHandler.setMaxAge( maxAge );
+		}
 	}
 
 	public void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException{
 		String userName = null;
 		String password = null;
-		ServletOutputStream out = res.getOutputStream();
+		String debugmode = req.getParameter(PARAM_DEBUGMODE);
 		
-		System.out.println("URL " + req.getRequestURL().toString());
+		ServletOutputStream out = res.getOutputStream();
  
 		try {
 			 StringBuffer requestURL = req.getRequestURL();
@@ -63,12 +66,15 @@ public class DominoStatelessTokenServlet extends HttpServlet implements Serializ
 					
 				userName = req.getParameter(PARAM_USERNAME);
 				password = req.getParameter(PARAM_PASSWORD);
-					
+				
+				
 				if(this.validatePassword( userName, password)){
 					res.setContentType( CONTENT_TYPE_JSON );
 					String tokenStr = tokenHandler.createTokenForUser(userName);
 					res.addHeader(AUTH_HEADER_NAME, tokenStr);
-					out.println("{token: '" + tokenStr + "'}");
+					if( debugmode != null )
+						out.println("{token: '" + tokenStr + "'}");
+					
 					return;
 				}else{
 					res.sendError(HttpServletResponse.SC_UNAUTHORIZED);
@@ -83,24 +89,25 @@ public class DominoStatelessTokenServlet extends HttpServlet implements Serializ
 				 if( req.getHeader(AUTH_HEADER_NAME) != null  )
 					 token = req.getHeader(AUTH_HEADER_NAME);
 				 
-				 if( req.getParameter(PARAM_TOKEN) != null )
-					 token = req.getParameter(PARAM_TOKEN);
-				 
+				 if( debugmode != null ){
+					 if( req.getParameter(PARAM_TOKEN) != null )
+						 token = req.getParameter(PARAM_TOKEN);
+				 }
 				 if( token == null ){
 					 res.sendError(HttpServletResponse.SC_BAD_REQUEST);
-					return;
+					 return;
 				 }
-				 if( token.length() != TOKEN_SIZE_MIN && token.length() != TOKEN_SIZE_MAX ){
-					 res.sendError(HttpServletResponse.SC_BAD_REQUEST);
-					return;
-				 }
+
 				 userName = getAuthentication(token);
 				 if (userName != null){
 					 res.setContentType( CONTENT_TYPE_JSON );
 					 this.currentSession = createUserSession( userName );
 					 out.println("{user: '" + this.currentSession.getEffectiveUserName() + "'}");
+					// out.println("{\"id\":1,\"content\":\"Hello,  " + this.currentSession.getEffectiveUserName() + "!\"}");
 				 }else{
-					res.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+					 res.setContentType( CONTENT_TYPE_JSON );
+					 out.println("{user: 'Anonymous'}");
+					// out.println("{\"id\":1,\"content\":\"Hello,  Stranger!\"}");
 					return; 
 				 }
 				 return;
@@ -112,7 +119,7 @@ public class DominoStatelessTokenServlet extends HttpServlet implements Serializ
 		} catch (Exception e) {
 			e.printStackTrace(new PrintStream(out));
 		} finally {
-			Utils.recycleDominoObjects(  this.currentSession );
+			Utils.recycleDominoObjects( this.currentSession );
 			out.close();
 		}
 	

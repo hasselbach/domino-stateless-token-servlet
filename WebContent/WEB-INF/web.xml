@@ -23,7 +23,9 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
     	<url-pattern>/*</url-pattern>
 	</filter-mapping>
 
-
+ 	<welcome-file-list>
+ 		<welcome-file>/static/index.html</welcome-file>
+ 	</welcome-file-list>
 	<context-param>
    	 	<param-name>UsernameBackend</param-name>
     	<param-value>Sven Hasselbach</param-value>
@@ -32,5 +34,10 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 	<context-param>
    	 	<param-name>SecretSalt</param-name>
     	<param-value>I am a secret salt!</param-value>
+	</context-param>
+	
+	<context-param>
+   	 	<param-name>TokenMaxAge</param-name>
+    	<param-value>900000000</param-value>
 	</context-param>
 </web-app>

@@ -184,4 +184,30 @@ public class StatelessTokenTest {
 		}
 	}
 
+	/**
+	 * Test if hashes with different timestamps are different
+	 */
+	@SuppressWarnings("static-access")
+	@Test
+	public final void testTokenMaxAge() {
+		StatelessToken token = new StatelessToken("TESTSALT");
+		token.setMaxAge( 5 );
+		final String toTest = "userName";
+		final String token1 = token.createTokenForUser(toTest);
+		
+		assertTrue("Token1 is NULL!", token1.length() > 0);
+		
+		// sleep 10ms for a different timestamp
+		try {
+			Thread.currentThread().sleep(10);
+		} catch (InterruptedException e) {}
+		
+		final String token2 = token.createTokenForUser(toTest);
+		assertTrue("Token2 is NULL!", token2.length() > 0);
+		
+		assertFalse("Tokens are equal (while timestamps are different)!",
+				token1.equals(token2));
+		
+	}
+	
 }
