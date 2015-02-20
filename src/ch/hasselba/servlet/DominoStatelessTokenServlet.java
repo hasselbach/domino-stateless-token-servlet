@@ -29,6 +29,7 @@ public class DominoStatelessTokenServlet extends HttpServlet implements Serializ
 	private static final String PARAM_PASSWORD = "password";
 	private static final String PARAM_DEBUGMODE = "debug";
 	private static final String PARAM_TOKEN = "token";
+	
 	private String userNameBackend;
 	private String secretSalt;
 	private StatelessToken tokenHandler;
@@ -107,7 +108,6 @@ public class DominoStatelessTokenServlet extends HttpServlet implements Serializ
 				 }else{
 					 res.setContentType( CONTENT_TYPE_JSON );
 					 out.println("{user: 'Anonymous'}");
-					// out.println("{\"id\":1,\"content\":\"Hello,  Stranger!\"}");
 					return; 
 				 }
 				 return;

@@ -33,18 +33,33 @@ public class StatelessToken {
 
 	}
 
+	/**
+	 * set the max age in milliseconds
+	 * 
+	 * @param maxAge
+	 * 		time in milliseconds
+	 */
 	
 	public void setMaxAge( final long maxAge ){
 		this.maxAge = maxAge;
 	}
 	
+	/**
+	 * returns the max age in milliseconds
+	 * 
+	 * @return
+	 * 		time in milliseconds
+	 */
 	public long getMaxAge(){
 		return this.maxAge;
 	}
+	
 	/**
 	 * creates a Hmac hash from the given byte Array
 	 * @param content
+	 * 
 	 * @return
+	 * 		byte array with Hmac hash
 	 */
 	protected synchronized byte[] createHmac(byte[] content) {
 		return hmac.doFinal(content);

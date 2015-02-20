@@ -3,17 +3,14 @@ package ch.hasselba.servlet;
 import static org.junit.Assert.*;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.util.concurrent.TimeUnit;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
-
 
 public class DominoStatelessTokenServletTest {
 
@@ -40,8 +37,11 @@ public class DominoStatelessTokenServletTest {
 	 * DISABLED: Redirect to Index instead!
 	 */
 	public void testEmptyPath() throws Exception {
+		
+	
+	 /*   
 		driver.get(baseUrl);
-		assertEquals("Error 400: Error reported: 400", driver.findElement(By.tagName("body")).getText());
+		assertEquals("Error 400: Error reported: 400", driver.findElement(By.tagName("body")).getText());*/
 	}
 
 	@Test
