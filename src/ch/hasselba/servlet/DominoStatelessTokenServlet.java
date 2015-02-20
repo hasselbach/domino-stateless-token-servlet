@@ -49,73 +49,26 @@ public class DominoStatelessTokenServlet extends HttpServlet implements Serializ
 	}
 
 	public void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException{
-		String userName = null;
-		String password = null;
-		String debugmode = req.getParameter(PARAM_DEBUGMODE);
 		
-		ServletOutputStream out = res.getOutputStream();
+		ServletOutputStream out = res.getOutputStream();		
  
 		try {
 			 StringBuffer requestURL = req.getRequestURL();
 			 	
 			 // create a new token
 			 if( requestURL.indexOf(URL_PATH_CREATE) != -1  ){
-				if (req.getParameter(PARAM_USERNAME) == null || req.getParameter(PARAM_PASSWORD) == null ) {
-					res.sendError(HttpServletResponse.SC_BAD_REQUEST);
-					return;
-				}
-					
-				userName = req.getParameter(PARAM_USERNAME);
-				password = req.getParameter(PARAM_PASSWORD);
-				
-				
-				if(this.validatePassword( userName, password)){
-					res.setContentType( CONTENT_TYPE_JSON );
-					String tokenStr = tokenHandler.createTokenForUser(userName);
-					res.addHeader(AUTH_HEADER_NAME, tokenStr);
-					if( debugmode != null )
-						out.println("{token: '" + tokenStr + "'}");
-					
-					return;
-				}else{
-					res.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-					return;
-			 	}
-			
-			}
+				this.doCreate(req, res, out);
+				return;
+			 }
 			 
+			 // validate a token
 			 if( requestURL.indexOf( URL_PATH_VALIDATE ) != -1  ){
-				 String token = null;
-				 
-				 if( req.getHeader(AUTH_HEADER_NAME) != null  )
-					 token = req.getHeader(AUTH_HEADER_NAME);
-				 
-				 if( debugmode != null ){
-					 if( req.getParameter(PARAM_TOKEN) != null )
-						 token = req.getParameter(PARAM_TOKEN);
-				 }
-				 if( token == null ){
-					 res.sendError(HttpServletResponse.SC_BAD_REQUEST);
-					 return;
-				 }
-
-				 userName = getAuthentication(token);
-				 if (userName != null){
-					 res.setContentType( CONTENT_TYPE_JSON );
-					 this.currentSession = createUserSession( userName );
-					 out.println("{user: '" + this.currentSession.getEffectiveUserName() + "'}");
-					// out.println("{\"id\":1,\"content\":\"Hello,  " + this.currentSession.getEffectiveUserName() + "!\"}");
-				 }else{
-					 res.setContentType( CONTENT_TYPE_JSON );
-					 out.println("{user: 'Anonymous'}");
-					return; 
-				 }
+				 this.doValidate(req, res, out);
 				 return;
 			 }
 			 
 			 // else: BAD REQUEST!
 			 res.sendError(HttpServletResponse.SC_BAD_REQUEST);
-			 return;
 		} catch (Exception e) {
 			e.printStackTrace(new PrintStream(out));
 		} finally {
@@ -124,6 +77,103 @@ public class DominoStatelessTokenServlet extends HttpServlet implements Serializ
 		}
 	
 	}
+	
+	/**
+	 * validate a token
+	 * 
+	 * @param req
+	 * 		HttpServletRequest
+	 * @param res
+	 * 		HttpServletResponse
+	 * @param out
+	 * 		ServletOutputStream
+	 * 
+	 * @throws IOException
+	 * @throws ServletException
+	 * 
+	 */
+	private void doValidate( HttpServletRequest req, HttpServletResponse res, ServletOutputStream out  ) throws IOException, ServletException{
+
+		final String debugmode = req.getParameter(PARAM_DEBUGMODE);
+		
+		
+		String token = null;
+		 
+		if( req.getHeader(AUTH_HEADER_NAME) != null  )
+			token = req.getHeader(AUTH_HEADER_NAME);
+		 
+		 if( debugmode != null ){
+			if( req.getParameter(PARAM_TOKEN) != null )
+				token = req.getParameter(PARAM_TOKEN);
+		 }
+		 
+		 if( token == null ){
+			 res.sendError(HttpServletResponse.SC_BAD_REQUEST);
+			 return;
+		 }
+
+		 final String userName = getAuthentication(token);
+		 if (userName != null){
+			 
+			 Session session = null;
+			 
+			 res.setContentType( CONTENT_TYPE_JSON );
+			 
+			 try{
+				 session = createUserSession( userName );
+				 out.println("{user: '" + session.getEffectiveUserName() + "'}");
+			 } catch (NotesException e) {
+				e.printStackTrace();
+			}finally{
+				Utils.recycleDominoObjects( session );
+			 }
+			 
+		 }else{
+			 res.setContentType( CONTENT_TYPE_JSON );
+			 out.println("{user: 'Anonymous'}");
+			 return; 
+		 }
+	}
+	/**
+	 * creates a new token if username / password are valid
+	 * 
+	 * @param req
+	 * 		HttpServletRequest
+	 * @param res
+	 * 		HttpServletResponse
+	 * @param out
+	 * 		ServletOutputStream
+	 * 
+	 * @throws IOException
+	 * @throws ServletException
+	 * 
+	 */
+	private void doCreate( HttpServletRequest req, HttpServletResponse res, ServletOutputStream out  ) throws IOException, ServletException{
+		
+		if (req.getParameter(PARAM_USERNAME) == null || req.getParameter(PARAM_PASSWORD) == null ) {
+			res.sendError(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+		
+		final String userName = req.getParameter(PARAM_USERNAME);
+		final String password = req.getParameter(PARAM_PASSWORD);
+		final String debugmode = req.getParameter(PARAM_DEBUGMODE);
+		
+		if(this.validatePassword( userName, password)){
+			
+			String tokenStr = tokenHandler.createTokenForUser(userName);
+			res.addHeader(AUTH_HEADER_NAME, tokenStr);
+			if( debugmode != null ){
+				res.setContentType( CONTENT_TYPE_JSON );
+				out.println("{token: '" + tokenStr + "'}");
+			}
+
+		}else{
+			res.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+	 	}
+		
+	}
+	
 	
 	/**
 	 * adds header containing token to HTTP response
