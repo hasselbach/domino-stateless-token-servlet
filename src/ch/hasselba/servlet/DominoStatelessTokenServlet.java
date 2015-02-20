@@ -121,7 +121,7 @@ public class DominoStatelessTokenServlet extends HttpServlet implements Serializ
 			 
 			 try{
 				 session = createUserSession( userName );
-				 out.println("{user: '" + session.getEffectiveUserName() + "'}");
+				 out.println("{username: '" + session.getEffectiveUserName() + "'}");
 			 } catch (NotesException e) {
 				e.printStackTrace();
 			}finally{
@@ -130,7 +130,7 @@ public class DominoStatelessTokenServlet extends HttpServlet implements Serializ
 			 
 		 }else{
 			 res.setContentType( CONTENT_TYPE_JSON );
-			 out.println("{user: 'Anonymous'}");
+			 out.println("{username: 'Anonymous'}");
 			 return; 
 		 }
 	}
