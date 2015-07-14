@@ -8,6 +8,9 @@ Generates a new token
 * http://example.com/token/validate/?token=MDkgRmViIDIwMTUgMjI6NDk6MTIuMzU2IUNOPVN2ZW4gSGFzc2VsYmFjaC9PVT1IYXNzZWxiYS9PPURF!9s7dSS7F67hSS/lLODZHVM0NsTR4IurkZtjiysGzoWA=
 Validates a token
 
+**KEEP IN MIND THAT THIS IS A PROOF OF CONCEPT ONLY!**
+
+Sensitive date (like passwords) should only transfered TLS encrypted over the wire (as you already know). When using the approach in a browser, it is better not to transfer the login credentials with HTTP GET.
 
 ---
  Copyright 2015 Sven Hasselbach
